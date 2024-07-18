@@ -3,7 +3,5 @@
 // License: zlib (see license.md in the root of the NVGT distribution)
 
 void main() {
-	string[] list = {"test", "test again", "idk", "asdf"};
-	alert("test", join(list, ", "));
-	alert("endless loop test", join({}, ","));
+	alert("test", datetime(SCRIPT_BUILD_TIME).format(DATE_TIME_FORMAT_ISO8601));
 }

@@ -1150,7 +1150,7 @@ BOOL sound::close() {
 	return false;
 }
 
-int sound::set_fx(std::string& fx, int idx) {
+int sound::set_fx(const std::string& fx, int idx) {
 	if (!output_mixer)
 		output_mixer = new mixer(parent_mixer, TRUE);
 	if (!output_mixer)
@@ -1205,14 +1205,14 @@ BOOL sound_base::set_position(float listener_x, float listener_y, float listener
 	return TRUE;
 }
 
-BOOL sound::play() {
+BOOL sound::play(bool reset_loop_state) {
 	if (!channel)
 		return FALSE;
 	if (loaded_filename != "" && is_playing())
 		return FALSE;
 	if (BASS_ChannelIsActive(channel) != BASS_ACTIVE_PLAYING)
 		BASS_Mixer_ChannelSetPosition(channel, 0, BASS_POS_BYTE);
-	BASS_ChannelFlags(channel, 0, BASS_SAMPLE_LOOP);
+	if (reset_loop_state) BASS_ChannelFlags(channel, 0, BASS_SAMPLE_LOOP);
 	return !(BASS_Mixer_ChannelFlags(channel, 0, BASS_MIXER_CHAN_PAUSE)&BASS_MIXER_CHAN_PAUSE);
 }
 
@@ -1557,7 +1557,7 @@ BOOL mixer::remove_sound(sound& s, BOOL internal) {
 	return TRUE;
 }
 
-int mixer::set_fx(std::string& fx, int idx) {
+int mixer::set_fx(const std::string& fx, int idx) {
 	if(fx.size()<1) {
 		if(idx>=0&&idx<effects.size()) {
 			for(DWORD i=idx+1; i<effects.size(); i++)
@@ -2018,7 +2018,7 @@ void RegisterScriptSound(asIScriptEngine* engine) {
 	engine->RegisterObjectMethod("sound", "void set_hrtf(bool = true)", asMETHOD(sound, set_hrtf), asCALL_THISCALL);
 	engine->RegisterObjectMethod("sound", "void set_length(float = 0.0)", asMETHOD(sound, set_length), asCALL_THISCALL);
 	engine->RegisterObjectMethod("sound", "bool set_fx(const string &in, int = -1)", asMETHOD(sound, set_fx), asCALL_THISCALL);
-	engine->RegisterObjectMethod("sound", "bool play()", asMETHOD(sound, play), asCALL_THISCALL);
+	engine->RegisterObjectMethod("sound", "bool play(bool = true)", asMETHOD(sound, play), asCALL_THISCALL);
 	engine->RegisterObjectMethod("sound", "bool play_wait()", asMETHOD(sound, play_wait), asCALL_THISCALL);
 	engine->RegisterObjectMethod("sound", "bool play_looped()", asMETHOD(sound, play_looped), asCALL_THISCALL);
 	engine->RegisterObjectMethod("sound", "bool pause()", asMETHOD(sound, pause), asCALL_THISCALL);

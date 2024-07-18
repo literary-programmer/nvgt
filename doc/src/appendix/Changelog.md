@@ -1,6 +1,43 @@
 # Changelog
 This document lists all major changes that have taken place in NVGT since we started keeping track.
 
+## New in 0.88.0-beta (07/01/2024):
+* several improvements to the audio form:
+    * fix the go to line dialog, it had broken a few versions ago when converting the form to no longer need bgt_compat.
+    * adds method `bool is_disallowed_char(int control_index, string char, bool search_all=true);` which checks whether the given characters are allowed. It is also possible to make the search_all parameter to true or false to toggle whether the method should search to match full text, or every character. You can also omit the control_index parameter, in which case the method is used internally in the control class.
+    * adds method `bool set_disallowed_chars(int control_index, string chars, bool use_only_disallowed_chars=false, string char_disallowed_description="");` which sets the disallowed characters in a given control. Setting the use_only_disallowed_chars parameter to true will restrict to use only characters that have been set into this list. The char_disallowed_description parameter is also optional and sets the description or the text to speak when the user types the character that isn't allowed. Default is set to empty, meaning there will be silent when the user types the not allowed character. Setting the chars parameter to empty string will clear the list, thus setting to its original state.
+    * Adds methods is_list_item_checked and get_checked_list_items, also made the get_list_selections function return a handle to the array.
+    * Add a type of list called tab panel. This does not include the ability to assign controls to each tab automatically right now, but instead just the facility to create a list that acts more like a tab control.
+* adds blocking functions to and exposes the pause functionality in the music manager include.
+* adds a boolean to sound.play (true by default) which controls whether to reset the loop state on sound resume, so it's now possible to pause a looping sound and resume it without knowing whether the sound loops.
+* add functions to var type such as is_integer, is_boolean, is_string and more to determine what is stored in the var, also var.clear().
+* Added `sound_pool_default_y_elevation` property into sound_pool. This property will be useful to set default `y_is_elevation` property of each sound pool without having to change later for every sound pool you declare. Note, however, that it will only work for sound_pools declared after the variable is set, for example a global sound_pool variable will likely initialize before any function in your code could set the property.
+* improve passing arguments to async calls.
+* Fix critical bug if using network_event by handle that could allow the static none event to get value assigned to! Also better type info caching during the creation of some arrays.
+* improve the speed of stream::read() when the stream size can be determined, which can be done automatically for files.
+* users should no longer need to install libgit2 and openssl in order to run NVGT games on MacOS!
+* Implement the recently contributed AVTTSVoice class into nvgt's tts_voice object, meaning we now have AVSpeechSynthesizer support for MacOS in NVGT! Temporary caveats:
+    * Though this works well enough for people to start playing with, it still needs more testing. In particular, too much switching of voices followed by speech could cause a tts_voice object to break, calling refresh would probably fix it. Exact condition to reproduce unknown.
+    * We also still need to figure out how to clamp the MacOS rate/pitch/volume parameters into the -10 to +10 that is typically used in the tts_voice class, so parameter adjustment may be rough for a short time.
+    * The contributed class provides methods to handle languages, but the nvgt tts_voice class does not yet have these, as such voices just have raw names for now until we brainstorm more API.
+    * For now this class speaks using the operating system directly and does not interact with bass, and so speak_to_memory is not yet supported. This will be addressed as the AVSpeech API does give us methods to do this.
+* It is now possible to open .nvgt scripts directly within finder with the MacOS app bundle!
+* array.insert_last can now take a handle to another array.
+* Documentation:
+    * major spell checking session as well as some formatting.
+    * array::insert_last method.
+    * sound::loaded_filename method.
+    * string::format method.
+    * get_characters function
+    * idle_ticks function.
+    * mutex class
+    * concurrency article
+    * Game programming tutorial updates
+    * Clarifies some information in the distrobution topic.
+    * Include direct links to MacOS and Linux build scripts.
+    * Minor updates to contributors topic.
+    * Updates to the todo and bgt upgrading topics.
+
 ## New in 0.87.2-beta (06/17/2024):
 * Hopefully removed the need for the user to run `xattr -c` on the mac app bundle!
 * Fix an accidental UTF8 conversion issue introduced into screen reader speech that took place when implementing speech dispatcher.
@@ -26,14 +63,14 @@ This document lists all major changes that have taken place in NVGT since we sta
 * Add support for speech dispatcher on Linux and other BSD systems!
 * You can now use the directive `#pragma embed packname.dat` as an alternative to `#including` your pack files.
 * Fix broken quoted strings when handling pragma directives, resolving issues with the `#pragma include` option.
-* Mostly finishes making it possible to configure various Angelscript engine properties as well as other NVGT options using configuration files, jjust needs pollishing.
+* Mostly finishes making it possible to configure various Angelscript engine properties as well as other NVGT options using configuration files, just needs polishing.
 * bgt_compat's string_to_number function now trims whitespace to comply with bgt's standard, our new faster parse_float doesn't do that anymore in the name of performance.
 * Fix issues with sound::push_memory():
     * actual audio files can be pushed to the function without modifying any other arguments other than the data string.
     * Calling sound.load() with a blank filename is no longer required before push_memory functions.
-* Some pollishing to the Angelscript integration:
+* Some polishing to the Angelscript integration:
     * If a global variable fails to initialize, the exception that caused it is now properly shown in the compilation error dialog.
-    * There should hoefully be no more cases where a compilation error dialog can show up after a script executes successfully and throws an exception. Instead if the user enables the warnings display, they should properly see warnings before the script executes.
+    * There should hopefully be no more cases where a compilation error dialog can show up after a script executes successfully and throws an exception. Instead if the user enables the warnings display, they should properly see warnings before the script executes.
     * Set up the infrastructure to be able to store a bit of extra encrypted information along side the bytecode payload in compiled programs, for now using that to more securely store the list of enabled plugins as well as the serialized Angelscript properties.
     * Scripts no longer compile if they do not contain a valid entry point.
 * Updated to the latest Angelscript WIP code which resolves a bytecode load error that had been reported.
@@ -92,12 +129,12 @@ This document lists all major changes that have taken place in NVGT since we sta
     * This also introduces the change that on windows, there is now nvgt.exe and nvgtw.exe that gets built, one with the windows subsystem and one without.
     * Script files and nvgt's binary will check for config files with the basename of file + .ini, .properties, or .json.
 * The above changes mean that we now implement the Angelscript debugger since the nvgt compiler is now always available in console mode.
-* NVGT now uses simantic versioning, for example 0.85.0.
+* NVGT now uses symantic versioning, for example 0.85.0.
 * Fixed script return code.
 * NVGT finally has a cross-platform installer (NSIS on Windows and a .dmg file on macOS).
 * The timer class once present in `bgt_compat.nvgt` is finally in the core of the engine!
 * it is now possible to embed packs into executables! 
-* The way Windows binaries load has been changed, meaning that UPX or any other binary compresser that supports overlays can now be used on your compiled NVGT binaries!
+* The way Windows binaries load has been changed, meaning that UPX or any other binary compressor that supports overlays can now be used on your compiled NVGT binaries!
 * The timer resolution should be much more accurate on Windows.
 * Added a new, optional `uint timeout` parameter to the `network.request()` method.
 * Improved documentation.
@@ -121,7 +158,7 @@ This document lists all major changes that have taken place in NVGT since we sta
 * The var type now has PostEnc and PostDec operators.
 * UTF8 fixes: sound.load, and compiled applications can now execute if they contain non-english characters in their filenames.
 * All code that I wish to share has been forked into what will hopefully be nvgt's long-standing repository which will eventually have it's privacy status switched to public!
-* NVGT now has a build system! I know it's not the fastest one around, but needing a  middleground between learning even more new things and using what I already know, I chose SCons purely because of the fermiliar pythonic environment and not needing to learn yet another new set of syntax rules. I'm just glad we're no longer building the engine using a series of shell scripts!
+* NVGT now has a build system! I know it's not the fastest one around, but needing a  middle ground between learning even more new things and using what I already know, I chose SCons purely because of the familiar pythonic environment and not needing to learn yet another new set of syntax rules. I'm just glad we're no longer building the engine using a series of shell scripts!
 * Added basic steam audio reverb integration! It needs a lot of work and is far from being production ready (seriously this could slow your game to a crawl until I'm done with this), but nevertheless it is still around for testing!
 
 ## New leading up to 02/20/2024:
@@ -134,7 +171,7 @@ This document lists all major changes that have taken place in NVGT since we sta
 * Remove sound_environment class for now.
 * Should load bassflac.dll and bassopus.dll if present
 * JSON Support.
-* Better multithreading support with more primatives.
+* Better multithreading support with more primitives.
 * More functions in the string class.
 * New methods of operating system detection.
 * Instance class removed from engine and replaced with include/instance.nvgt which wraps a named_mutex.
@@ -143,7 +180,7 @@ This document lists all major changes that have taken place in NVGT since we sta
 * Other misc changes.
 
 ## Note for changes before 01/06/2024:
-Changes were roughly untracked before this time, but there is a rather large list of somewhat sorted changes below as commited to nvgt_bin (a repository where the NVGT testers could access and test NVGT). These are sorted by month where possible to make them easier to sort, but keep in mind that commits to nvgt_bin usually occurred all at once so that building NVGT was easier for all platforms. As such, expect these lists (while somewhat sorted) to become rather large! Additionally, some of these changes may be ambiguous due to being based off of nvgt_bin's commit messages only. At this time, it was assumed anyone using this engine had direct contact with Sam to ask questions.
+Changes were roughly untracked before this time, but there is a rather large list of somewhat sorted changes below as committed to nvgt_bin (a repository where the NVGT testers could access and test NVGT). These are sorted by month where possible to make them easier to sort, but keep in mind that commits to nvgt_bin usually occurred all at once so that building NVGT was easier for all platforms. As such, expect these lists (while somewhat sorted) to become rather large! Additionally, some of these changes may be ambiguous due to being based off of nvgt_bin's commit messages only. At this time, it was assumed anyone using this engine had direct contact with Sam to ask questions.
 
 ## New as of 12/10/2023:
 * Using more poco libraries including basic json implementation.
@@ -177,7 +214,7 @@ Changes were roughly untracked before this time, but there is a rather large lis
 * New system information functions for custom system fingerprint or error tracking.
 * Improvements to coordinate_map.
 * Subscripting can now compile to bytecode.
-* Fixed vector devision scaling operators.
+* Fixed vector division scaling operators.
 * Improved reliability of timer queue.
 * Many more minor bugfixes.
 
