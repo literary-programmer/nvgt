@@ -1611,6 +1611,18 @@ public:
 		return load_pcm(buffer->ptr, buffer->size * buffer->get_element_size(), format, samplerate, channels);
 	}
 	bool stream_pcm(const void* data, unsigned int size_in_frames, ma_format format, unsigned int sample_rate, unsigned int channels, unsigned int buffer_size) override {
+	// If we have an existing stream, check if the sample rate or channel count has changed.
+	// If either has changed, we must re-initialize to prevent the "slow/fast" playback bug
+	// and channel mapping distortions.
+	if (pcm_stream != nullptr) {
+		bool rate_changed = (sample_rate != 0 && sample_rate != ma_pcm_rb_get_sample_rate(&*pcm_stream));
+		bool channels_changed = (channels != 0 && channels != ma_pcm_rb_get_channels(&*pcm_stream));
+		if (rate_changed || channels_changed) {
+			// Force re-initialization by getting the current format.
+			// This triggers the 'if (format != ma_format_unknown)' block below.
+			format = ma_pcm_rb_get_format(&*pcm_stream);
+		}
+	}
 		if (format != ma_format_unknown) {
 			if (snd) close();
 			if (!buffer_size) buffer_size = size_in_frames * 2;
